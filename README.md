@@ -1,6 +1,20 @@
 # Macro Event Impact Prediction System
 
-A real-time system for predicting how macroeconomic events (CPI, NFP, PMI, interest rate decisions) will impact financial markets. **Predictions are derived from current market-implied expectations**, not just historical data.
+A real-time system for predicting how macroeconomic events (CPI, NFP, PMI, interest rate decisions) will impact financial markets. **Predictions are derived from current market-implied expectations** (VIX, yield curve, Fed Funds Futures, TIPS spreads) combined with a calibrated reaction model, not just historical data. The system ships with a command-line interface, an interactive Dash dashboard and a Python API.
+
+## Contents
+
+- [Key Features](#key-features)
+- [How It Works](#how-it-works)
+- [Data Freshness](#data-freshness)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Output Example](#output-example)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [Tracked Events](#tracked-events)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ## Key Features
 
@@ -265,7 +279,7 @@ The calendar is the input timeline that drives the whole engine. It's not pulled
 
 ![Interactive Dashboard](assets/visualizations/interactive_dashboard_v2.gif)
 
-The dashboard is the user-facing presentation layer. Launched via `python main.py dashboard`, it serves at `http://127.0.0.1:8050` and bundles all the engine's outputs: live VIX/Fed/curve indicators, the events table, prediction charts, scenario comparisons, risk gauges. The animation below is a stylised representation showing how the six top-level indicator towers stream new values out of phase.
+The dashboard is the user-facing presentation layer. Launched via `python main.py dashboard`, it serves at `http://127.0.0.1:8050` and bundles all the engine's outputs: live VIX/Fed/curve indicators, the events table, prediction charts, scenario comparisons, risk gauges. The animation above is a stylised representation showing how the six top-level indicator towers stream new values out of phase.
 
 - **What you see:** six dashboard indicators as 3D towers in a 3 × 2 grid: `VIX`, `P(Fed Cut)%`, `10Y-3M spread`, `Breakeven Inflation`, `Risk score`, `Daily σ`. Tower height = each indicator's normalized value (0–10 scale per indicator using its own swing range).
 - **What animates:** all six indicators stream new values out of phase — the exact behaviour of the live Dash front-end.
@@ -322,17 +336,17 @@ and logs a warning.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/Macro-Impact-Predictions-.git
+git clone https://github.com/grzresearch/Macro-Impact-Predictions-.git
 cd Macro-Impact-Predictions-
 
-# Create virtual environment
+# Create a virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy environment template
+# Copy the environment template
 cp .env.example .env
 # Edit .env and add your API keys (optional but recommended)
 ```
@@ -340,27 +354,34 @@ cp .env.example .env
 ### API Keys (Optional)
 
 For best results, get free API keys:
+
 - **FRED API**: https://fred.stlouisfed.org/docs/api/api_key.html
 - **Alpha Vantage**: https://www.alphavantage.co/support/#api-key
 
 The system works without API keys using demo/sample data.
 
-## Quick Start
+## Usage
 
-### 1. View Predictions (CLI)
+All commands are run from the repository root.
+
+### Command-line predictions
 
 ```bash
-# Show predictions for next 7 days
+# Show predictions for the next 7 days
 python main.py predict
 
-# Show predictions for next 14 days with HTML charts
+# Show predictions for the next 14 days and write HTML charts to output/
 python main.py predict -d 14 --html
 
-# Quick prediction for next event
+# Quick prediction for the next event (optionally filtered by type)
 python main.py quick
+python main.py quick --type rates
+
+# Full list of commands and options
+python main.py --help
 ```
 
-### 2. Launch Interactive Dashboard
+### Interactive dashboard
 
 ```bash
 python main.py dashboard
@@ -368,7 +389,7 @@ python main.py dashboard
 
 Then open http://127.0.0.1:8050 in your browser.
 
-### 3. Use as Library
+### Python API
 
 ```python
 from src.models.prediction_engine import PredictionEngine
@@ -394,6 +415,19 @@ for pred in predictions:
     print(f"\n{pred.event.event_name}:")
     print(f"  Expected SPY Move: ±{spy_move.expected_move_pct:.2f}%")
     print(f"  P(Up): {spy_move.probability_up*100:.0f}%")
+```
+
+### Examples
+
+```bash
+python examples/basic_usage.py        # market expectations, events and predictions
+python examples/scenario_analysis.py  # outcome scenarios for upcoming releases
+```
+
+### Regenerating the animations
+
+```bash
+python scripts/generate_3d_visualizations.py   # writes the GIFs to assets/visualizations/
 ```
 
 ## Output Example
@@ -428,14 +462,23 @@ for pred in predictions:
        • Market pricing 35% cut / 10% hike
 ```
 
+## Configuration
+
+- `config/settings.yaml` — tracked indicators (FRED series), instruments, analysis windows, model weights, dashboard, logging and cache settings. API keys are substituted from environment variables.
+- `.env` (copied from `.env.example`) — `FRED_API_KEY`, `ALPHA_VANTAGE_API_KEY`, dashboard host/port, debug mode and log level.
+- `data/consensus_overrides.json` (copied from `data/consensus_overrides.example.json`) — manual consensus values that override every other source.
+
+Runtime caches and generated charts are written to `cache/` and `output/`; both are ignored by Git.
+
 ## Project Structure
 
 ```
 Macro-Impact-Predictions-/
-├── main.py                 # Main CLI entry point
+├── main.py                 # CLI entry point (predict, quick, dashboard)
 ├── requirements.txt        # Python dependencies
+├── .env.example            # Environment variable template
 ├── config/
-│   └── settings.yaml      # Configuration file
+│   └── settings.yaml       # Configuration file
 ├── src/
 │   ├── data/
 │   │   ├── macro_data_fetcher.py    # FRED/macro data
@@ -486,12 +529,8 @@ This system is for educational and research purposes only. The predictions are b
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-For issues or questions, please open a GitHub issue.
+Contributions are welcome. Please open a GitHub issue for questions or bug reports, or submit a pull request.
