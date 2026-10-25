@@ -25,7 +25,7 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-OUTPUT_DIR = Path(__file__).parent / "visualizations"
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "assets" / "visualizations"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Bump this suffix when you change the GIF rendering — it busts the
